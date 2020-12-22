@@ -12,6 +12,8 @@ node('with-basic-tools-bea') {
         //example of other things that can be done
         def statusJacoco = sh script:'mvn -V -B -e org.jacoco:jacoco-maven-plugin:0.7.9:prepare-agent install org.jacoco:jacoco-maven-plugin:0.7.9:report -Dconcurrency=1 -Dfindbugs.failOnError=false -Ptest-coverage', returnStatus:true
         githubNotify context: 'JACOCO', description: 'Run jacoco', status: statusJacoco ? 'FAILURE' : 'SUCCESS'
+        sh "cp target/*.jar spring-petclinic.jar"
+        archiveArtifacts "spring-petclinic.jar"
 
     }
 }
