@@ -21,8 +21,9 @@ node('with-basic-tools-bea') {
         unarchive mapping: ['spring-petclinic.jar': 'spring-petclinic.jar']
         def statusDockerBuild = sh script: "docker build . -t ${dockerImageName}:${branchName}", returnStatus:true
         githubNotify context: 'BUILD DOCKER', description: 'Build docker image of a project', status: statusDockerBuild ? 'FAILURE' : 'SUCCESS'
-        def statusDockerPush = sh script: "docker push ${dockerImageName}:${branchName}", returnStatus:true
-        githubNotify context: 'PUSH DOCKER', description: 'Push docker image in dockerhub', status: statusDockerPush ? 'FAILURE' : 'SUCCESS'
-
+        withCredentials([usernamePassword(credentialsId: 'docker-bea-cb-test', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+            def statusDockerPush = sh script: "docker login -u $DOCKER_USER -p $DOCKER_PASS;docker push ${dockerImageName}:${branchName}", returnStatus:true
+            githubNotify context: 'PUSH DOCKER', description: 'Push docker image in dockerhub', status: statusDockerPush ? 'FAILURE' : 'SUCCESS'
+        }
     }
 }
