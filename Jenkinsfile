@@ -14,6 +14,12 @@ node('with-basic-tools-bea') {
         githubNotify context: 'JACOCO', description: 'Run jacoco', status: statusJacoco ? 'FAILURE' : 'SUCCESS'
         sh "cp target/*.jar spring-petclinic.jar"
         archiveArtifacts "spring-petclinic.jar"
+    }
+    stage("Create docker images") {
+        def branchName = env.BRANCH_NAME
+        unarchive mapping: ['spring-petclinic.jar': 'spring-petclinic.jar']
+        def statusDockerBuild = sh script: "docker build . -t ${dockerImageName}:${branchName}", returnStatus:true
+        githubNotify context: 'BUILD DOCKER', description: 'Build docker image of a project', status: statusDockerBuild ? 'FAILURE' : 'SUCCESS'
 
     }
 }
