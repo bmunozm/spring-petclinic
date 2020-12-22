@@ -3,6 +3,7 @@
 // Pipeline GitHub Notify Step Plugin, it can be installed
 node('with-basic-tools-bea') {
     // First heath test is to be sure you are executing testing before merging the PR
+    def dockerImageName = "bmunozm/spring-petclinic"
     stage("Build and test") {
         checkout scm
         def statusCodeInstall = sh script:"mvn clean install -DskipTests", returnStatus:true
@@ -15,11 +16,13 @@ node('with-basic-tools-bea') {
         sh "cp target/*.jar spring-petclinic.jar"
         archiveArtifacts "spring-petclinic.jar"
     }
-    stage("Create docker images") {
+    stage("Docker image") {
         def branchName = env.BRANCH_NAME
         unarchive mapping: ['spring-petclinic.jar': 'spring-petclinic.jar']
         def statusDockerBuild = sh script: "docker build . -t ${dockerImageName}:${branchName}", returnStatus:true
         githubNotify context: 'BUILD DOCKER', description: 'Build docker image of a project', status: statusDockerBuild ? 'FAILURE' : 'SUCCESS'
+        def statusDockerPush = sh script: "docker push ${dockerImageName}:${branchName}", returnStatus:true
+        githubNotify context: 'PUSH DOCKER', description: 'Push docker image in dockerhub', status: statusDockerPush ? 'FAILURE' : 'SUCCESS'
 
     }
 }
